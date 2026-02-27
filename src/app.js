@@ -13,7 +13,7 @@ const app = express();
 // Middlewares
 app.use(helmet());
 app.use(cors({
-  origin: ["http://localhost:5173", "http://localhost:5174", "https://mengkhey45.github.io"], 
+  origin: ["http://localhost:5173", "http://localhost:5174", "https://mengkhey45.github.io", "https://mengkhey.vercel.app"], 
   credentials: true
 }));
 app.use(compression());
