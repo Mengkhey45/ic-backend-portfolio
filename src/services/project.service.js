@@ -73,9 +73,14 @@ export const createProject = async (data, file) => {
 };
 
 export const getAllProjects = async () => {
-  return await prisma.project.findMany({
-    orderBy: { createdAt: "desc" },
-  });
+  try {
+    return await prisma.project.findMany({
+      orderBy: { createdAt: "desc" },
+    });
+  } catch (err) {
+    console.error("DB Fetch Projects failed:", err);
+    throw new Error(`DB Fetch Error: ${err.message}`);
+  }
 };
 
 export const updateProject = async (id, data, file) => {
