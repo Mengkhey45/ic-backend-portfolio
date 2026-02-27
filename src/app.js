@@ -13,7 +13,7 @@ const app = express();
 // Middlewares
 app.use(helmet());
 app.use(cors({
-  origin: ["http://localhost:5173", "http://localhost:5174"], // Common Vite ports
+  origin: ["http://localhost:5173", "http://localhost:5174", "https://mengkhey45.github.io"], 
   credentials: true
 }));
 app.use(compression());
@@ -36,6 +36,11 @@ app.use("/api/chat", chatRoutes);
 // Health check
 app.get("/health", (req, res) => {
   res.status(200).json({ status: "ok" });
+});
+
+// Root route for Render and general use
+app.get("/", (req, res) => {
+  res.status(200).send("Backend Portfolio API is running 🚀");
 });
 
 // Error handling
