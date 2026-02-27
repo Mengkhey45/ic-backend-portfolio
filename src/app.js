@@ -24,7 +24,8 @@ const allowedOrigins = [
   "http://localhost:5173",
   "http://localhost:5174",
   "https://mengkhey45.github.io",
-  "https://mengkhey.vercel.app"
+  "https://mengkhey.vercel.app",
+  "https://ic-vert.vercel.app"
 ];
 
 app.use(cors({
@@ -34,6 +35,7 @@ app.use(cors({
     
     const isAllowed = allowedOrigins.includes(origin) || 
                      origin.endsWith(".vercel.app") || 
+                     origin.includes("vercel.app") ||
                      origin.endsWith(".github.io");
                      
     if (isAllowed) {
