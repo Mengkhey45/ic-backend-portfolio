@@ -12,10 +12,33 @@ const app = express();
 
 // Middlewares
 app.use(helmet());
+
+// Dynamic CORS configuration to support Vercel preview links and production
+const allowedOrigins = [
+  "http://localhost:5173",
+  "http://localhost:5174",
+  "https://mengkhey45.github.io",
+  "https://mengkhey.vercel.app"
+];
+
 app.use(cors({
-  origin: ["http://localhost:5173", "http://localhost:5174", "https://mengkhey45.github.io", "https://mengkhey.vercel.app"], 
+  origin: (origin, callback) => {
+    // allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    const isAllowed = allowedOrigins.includes(origin) || 
+                     origin.endsWith(".vercel.app") || 
+                     origin.endsWith(".github.io");
+                     
+    if (isAllowed) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
   credentials: true
 }));
+
 app.use(compression());
 app.use(morgan("dev"));
 
