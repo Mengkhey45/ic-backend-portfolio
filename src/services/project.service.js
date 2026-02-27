@@ -1,4 +1,4 @@
-import prisma from "../prisma/client.js";
+import Project from "../models/Project.js";
 import { r2 } from "../config/r2.js";
 import { PutObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
 import crypto from "crypto";
@@ -54,17 +54,15 @@ export const createProject = async (data, file) => {
       }
     }
 
-    const project = await prisma.project.create({
-      data: {
-        title: data.title || "Untitled Project",
-        description: data.description || "",
-        techStack: Array.isArray(techStack) ? techStack.map(t => typeof t === 'object' ? t.name : t) : [],
-        githubLink: data.githubLink || null,
-        liveLink: data.liveLink || null,
-        imageUrl: imageUrl || null,
-      },
+    const project = await Project.create({
+      title: data.title || "Untitled Project",
+      description: data.description || "",
+      techStack: Array.isArray(techStack) ? techStack.map(t => typeof t === 'object' ? t.name : t) : [],
+      githubLink: data.githubLink || null,
+      liveLink: data.liveLink || null,
+      imageUrl: imageUrl || null,
     });
-    console.log("Project created in DB:", project.id);
+    console.log("Project created in DB:", project._id);
     return project;
   } catch (err) {
     console.error("DB Project creation failed:", err);
@@ -74,9 +72,7 @@ export const createProject = async (data, file) => {
 
 export const getAllProjects = async () => {
   try {
-    return await prisma.project.findMany({
-      orderBy: { createdAt: "desc" },
-    });
+    return await Project.find().sort({ createdAt: -1 });
   } catch (err) {
     console.error("DB Fetch Projects failed:", err);
     throw new Error(`DB Fetch Error: ${err.message}`);
@@ -84,7 +80,7 @@ export const getAllProjects = async () => {
 };
 
 export const updateProject = async (id, data, file) => {
-  const project = await prisma.project.findUnique({ where: { id } });
+  const project = await Project.findById(id);
   if (!project) throw new Error("Project not found");
 
   let imageUrl = project.imageUrl;
@@ -101,13 +97,20 @@ export const updateProject = async (id, data, file) => {
     imageUrl = uploadResult.publicUrl;
   }
 
-  const techStack = Array.isArray(data.techStack) 
-    ? data.techStack 
-    : (typeof data.techStack === 'string' ? JSON.parse(data.techStack) : []);
+  let techStack = [];
+  if (Array.isArray(data.techStack)) {
+    techStack = data.techStack;
+  } else if (typeof data.techStack === 'string' && data.techStack.trim() !== '') {
+    try {
+      techStack = JSON.parse(data.techStack);
+    } catch (e) {
+      techStack = [];
+    }
+  }
 
-  return await prisma.project.update({
-    where: { id },
-    data: {
+  return await Project.findByIdAndUpdate(
+    id,
+    {
       title: data.title,
       description: data.description,
       techStack: Array.isArray(techStack) ? techStack.map(t => typeof t === 'object' ? t.name : t) : [],
@@ -115,11 +118,12 @@ export const updateProject = async (id, data, file) => {
       liveLink: data.liveLink,
       imageUrl,
     },
-  });
+    { new: true }
+  );
 };
 
 export const deleteProject = async (id) => {
-  const project = await prisma.project.findUnique({ where: { id } });
+  const project = await Project.findById(id);
   if (project?.imageUrl) {
     const fileName = project.imageUrl.split("/").pop();
     try {
@@ -128,5 +132,5 @@ export const deleteProject = async (id) => {
       console.error("Failed to delete image from R2:", err);
     }
   }
-  return await prisma.project.delete({ where: { id } });
+  return await Project.findByIdAndDelete(id);
 };

@@ -5,17 +5,26 @@ import {
   createProject,
   getProjects,
   updateProject,
-  deleteProject
+  deleteProject,
+  toggleVisibility
 } from "../controllers/project.controller.js";
 
 const router = express.Router();
+
+const cpUpload = upload.fields([
+  { name: 'thumbnail', maxCount: 1 },
+  { name: 'images', maxCount: 10 },
+  { name: 'video', maxCount: 1 },
+  { name: 'pdf', maxCount: 1 }
+]);
 
 // public
 router.get("/", getProjects);
 
 // admin only
-router.post("/", protect, upload.single("image"), createProject);
-router.put("/:id", protect, upload.single("image"), updateProject);
+router.post("/", protect, cpUpload, createProject);
+router.put("/:id", protect, cpUpload, updateProject);
+router.patch("/:id/visibility", protect, toggleVisibility);
 router.delete("/:id", protect, deleteProject);
 
 export default router;
