@@ -1,9 +1,10 @@
 import Project from "../models/Project.js";
-import { r2 } from "../config/r2.js";
+import { getR2Client } from "../config/r2.js";
 import { PutObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
 import crypto from "crypto";
 
 const uploadToR2 = async (file) => {
+  const r2 = getR2Client();
   console.log("Uploading to R2...", file.originalname);
   const fileName = `${crypto.randomBytes(16).toString("hex")}-${file.originalname}`;
   const command = new PutObjectCommand({

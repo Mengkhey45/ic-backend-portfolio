@@ -1,5 +1,5 @@
 import { PutObjectCommand } from "@aws-sdk/client-s3";
-import { r2 } from "../config/r2.js";
+import { getR2Client } from "../config/r2.js";
 import crypto from "crypto";
 
 /**
@@ -11,6 +11,7 @@ import crypto from "crypto";
 export const uploadToR2 = async (file, folder = "uploads") => {
   if (!file) return null;
 
+  const r2 = getR2Client();
   const fileExtension = file.originalname.split(".").pop();
   const fileName = `${folder}/${crypto.randomBytes(16).toString("hex")}.${fileExtension}`;
   

@@ -1,13 +1,59 @@
 import Project from "../models/Project.js";
 import { uploadToR2 } from "../utils/r2-upload.js";
+import getRedisClient from "../config/redis.js";
+
+const CACHE_KEY = "projects:all";
+const CACHE_EXPIRATION = 3600; // 1 hour
+
+/**
+ * Helper to invalidate projects cache
+ */
+const invalidateCache = async () => {
+  try {
+    const redis = getRedisClient();
+    if (redis) {
+      await redis.del(CACHE_KEY);
+      console.log("Projects cache invalidated 🔄");
+    }
+  } catch (error) {
+    console.warn("Redis cache invalidation failed:", error.message);
+  }
+};
 
 export const getProjects = async (req, res) => {
   try {
+    const redis = getRedisClient();
+    
+    // Try to get from cache first
+    if (redis) {
+      try {
+        const cachedData = await redis.get(CACHE_KEY);
+        if (cachedData) {
+          console.log("Serving projects from cache ⚡");
+          return res.json({ projects: JSON.parse(cachedData) });
+        }
+      } catch (redisError) {
+        console.warn("Redis GET failed, falling back to DB:", redisError.message);
+      }
+    }
+
     const projects = await Project.find()
       .populate("category")
       .sort({ createdAt: -1 });
+
+    // Save to cache for next time
+    if (redis && projects.length > 0) {
+      try {
+        await redis.set(CACHE_KEY, JSON.stringify(projects), "EX", CACHE_EXPIRATION);
+        console.log("Projects cached 💾");
+      } catch (redisError) {
+        console.warn("Redis SET failed:", redisError.message);
+      }
+    }
+
     res.json({ projects });
   } catch (error) {
+    console.error("Fetch projects error:", error);
     res.status(500).json({ message: "Error fetching projects" });
   }
 };
@@ -44,7 +90,7 @@ export const createProject = async (req, res) => {
       media.push({ type: "pdf", url, title: req.files.pdf[0].originalname });
     }
 
-    // Parse links if they come as string or array
+    // Parse links
     let parsedLinks = [];
     if (Array.isArray(links)) {
       parsedLinks = links.filter(l => l && l.trim() !== "");
@@ -69,6 +115,10 @@ export const createProject = async (req, res) => {
     });
 
     const populatedProject = await Project.findById(project._id).populate("category");
+    
+    // Invalidate cache
+    await invalidateCache();
+    
     res.status(201).json(populatedProject);
   } catch (error) {
     console.error("Create project error:", error);
@@ -89,7 +139,6 @@ export const updateProject = async (req, res) => {
     let thumbnail = project.thumbnail;
     let media = [];
     
-    // If existingMedia is provided, keep those
     if (existingMedia) {
       try {
         media = JSON.parse(existingMedia);
@@ -100,12 +149,10 @@ export const updateProject = async (req, res) => {
         media = project.media;
     }
 
-    // Handle thumbnail
     if (req.files?.thumbnail?.[0]) {
       thumbnail = await uploadToR2(req.files.thumbnail[0], "thumbnails");
     }
 
-    // Handle new images
     if (req.files?.images) {
       for (const file of req.files.images) {
         const url = await uploadToR2(file, "media/images");
@@ -113,19 +160,16 @@ export const updateProject = async (req, res) => {
       }
     }
 
-    // Handle new video
     if (req.files?.video?.[0]) {
       const url = await uploadToR2(req.files.video[0], "media/videos");
       media.push({ type: "video", url, title: req.files.video[0].originalname });
     }
 
-    // Handle new pdf
     if (req.files?.pdf?.[0]) {
       const url = await uploadToR2(req.files.pdf[0], "media/pdfs");
       media.push({ type: "pdf", url, title: req.files.pdf[0].originalname });
     }
 
-    // Parse links
     let parsedLinks = [];
     if (Array.isArray(links)) {
       parsedLinks = links.filter(l => l && l.trim() !== "");
@@ -155,6 +199,9 @@ export const updateProject = async (req, res) => {
       { new: true }
     ).populate("category");
 
+    // Invalidate cache
+    await invalidateCache();
+
     res.json(updatedProject);
   } catch (error) {
     console.error("Update project error:", error);
@@ -169,6 +216,10 @@ export const deleteProject = async (req, res) => {
     if (!project) {
       return res.status(404).json({ message: "Project not found" });
     }
+    
+    // Invalidate cache
+    await invalidateCache();
+    
     res.json({ message: "Project deleted successfully" });
   } catch (error) {
     res.status(500).json({ message: "Error deleting project" });
@@ -189,6 +240,9 @@ export const toggleVisibility = async (req, res) => {
     if (!project) {
       return res.status(404).json({ message: "Project not found" });
     }
+    
+    // Invalidate cache
+    await invalidateCache();
     
     res.json(project);
   } catch (error) {
