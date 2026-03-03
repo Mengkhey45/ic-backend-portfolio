@@ -4,7 +4,7 @@ import ShareLink from "../models/ShareLink.js";
 
 export const getPublicPortfolio = async (req, res) => {
   try {
-    const { token } = req.query;
+    const { token, accessCode } = req.query;
 
     if (!token) {
       return res.status(400).json({ message: "Token is required" });
@@ -20,10 +20,27 @@ export const getPublicPortfolio = async (req, res) => {
       return res.status(404).json({ message: "Invalid or expired share link" });
     }
 
+    // Check for access code if required
+    if (shareLink.accessCode && shareLink.accessCode !== accessCode) {
+      return res.status(403).json({ 
+        message: "Access code required", 
+        codeRequired: true 
+      });
+    }
+
     let projects;
+    let categoryQuery = {};
+
     if (shareLink.isPortfolioLink) {
-      // Get all non-hidden projects
-      projects = await Project.find({ isHidden: false })
+      const projectQuery = { isHidden: false };
+      
+      // If allowedCategories are specified, filter projects by them
+      if (shareLink.allowedCategories && shareLink.allowedCategories.length > 0) {
+        projectQuery.category = { $in: shareLink.allowedCategories };
+        categoryQuery = { _id: { $in: shareLink.allowedCategories } };
+      }
+      
+      projects = await Project.find(projectQuery)
         .populate("category")
         .sort({ createdAt: -1 });
     } else {
@@ -34,7 +51,7 @@ export const getPublicPortfolio = async (req, res) => {
       }).populate("category");
     }
 
-    const categories = await Category.find();
+    const categories = await Category.find(categoryQuery);
 
     res.json({ projects, categories });
   } catch (error) {
