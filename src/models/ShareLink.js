@@ -6,7 +6,7 @@ const ShareLinkSchema = new mongoose.Schema({
   isPortfolioLink: { type: Boolean, default: true }, // true for full portfolio
   projectId: { type: mongoose.Schema.Types.ObjectId, ref: "Project" }, // Optional for single project links
   privateNote: { type: String, default: "" }, // For IC internal note
-  accessCode: { type: String, default: "" }, // Required code for client access
+  accessCode: { type: String, required: true, trim: true }, // Required code for client access
   allowedCategories: [{ type: mongoose.Schema.Types.ObjectId, ref: "Category" }], // Categories allowed in this link
 }, { timestamps: true });
 

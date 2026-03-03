@@ -20,8 +20,8 @@ export const getPublicPortfolio = async (req, res) => {
       return res.status(404).json({ message: "Invalid or expired share link" });
     }
 
-    // Check for access code if required
-    if (shareLink.accessCode && shareLink.accessCode !== accessCode) {
+    // Check for access code (Mandatory)
+    if (!accessCode || shareLink.accessCode !== accessCode) {
       return res.status(403).json({ 
         message: "Access code required", 
         codeRequired: true 
