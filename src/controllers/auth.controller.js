@@ -1,35 +1,32 @@
-import bcrypt from "bcrypt";
+import User from "../models/User.js";
 import { generateToken } from "../utils/jwt.js";
 
 export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // check email
-    if (email !== process.env.ADMIN_EMAIL) {
+    // Find user in MongoDB
+    const user = await User.findOne({ email: email.toLowerCase() });
+    if (!user) {
       return res.status(401).json({ message: "Invalid credentials" });
     }
 
-    // compare password
-    const isMatch = await bcrypt.compare(
-      password,
-      process.env.ADMIN_PASSWORD
-    );
-
+    // Compare password
+    const isMatch = await user.comparePassword(password);
     if (!isMatch) {
       return res.status(401).json({ message: "Invalid credentials" });
     }
 
-    // generate token
-    const token = generateToken(email);
+    // Generate token
+    const token = generateToken(user._id, user.email);
 
     res.json({
       message: "Login success",
       token,
       user: {
-        id: "admin-id",
-        email: email,
-        name: "Admin User"
+        id: user._id,
+        email: user.email,
+        name: user.name
       }
     });
   } catch (error) {
