@@ -28,6 +28,9 @@ pids
 *.seed
 *.pid.lock
 
+# Seed script (contains credentials)
+seed.js
+
 # Testing
 coverage
 .nyc_output
