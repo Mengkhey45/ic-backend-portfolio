@@ -106,7 +106,7 @@ export const createProject = async (req, res) => {
     const project = await Project.create({
       title,
       description,
-      category,
+      ...(category ? { category } : {}),
       label,
       isHidden: isHidden === "true" || isHidden === true,
       thumbnail,

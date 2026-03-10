@@ -4,7 +4,7 @@ const ProjectSchema = new mongoose.Schema({
   title: { type: String, required: true },
   description: { type: String, required: true },
   thumbnail: { type: String },
-  category: { type: mongoose.Schema.Types.ObjectId, ref: "Category", required: true },
+  category: { type: mongoose.Schema.Types.ObjectId, ref: "Category", default: null },
   label: { type: String }, // Private note for IC
   media: [{
     type: { type: String, enum: ['image', 'video', 'pdf', 'link'], required: true },

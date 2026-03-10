@@ -8,7 +8,6 @@ const ShareLinkSchema = new mongoose.Schema({
   privateNote: { type: String, default: "" }, // For IC internal note
   accessCode: { type: String, required: true, trim: true }, // Required code for client access
   allowedCategories: [{ type: mongoose.Schema.Types.ObjectId, ref: "Category" }], // Categories allowed in this link
-  allowedProjects: [{ type: mongoose.Schema.Types.ObjectId, ref: "Project" }], // Specific projects allowed in this link
 }, { timestamps: true });
 
 export default mongoose.model("ShareLink", ShareLinkSchema);
