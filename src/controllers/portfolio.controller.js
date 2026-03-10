@@ -34,8 +34,12 @@ export const getPublicPortfolio = async (req, res) => {
     if (shareLink.isPortfolioLink) {
       const projectQuery = { isHidden: false };
       
-      // If allowedCategories are specified, filter projects by them
-      if (shareLink.allowedCategories && shareLink.allowedCategories.length > 0) {
+      // If allowedProjects are specified, only show those projects
+      if (shareLink.allowedProjects && shareLink.allowedProjects.length > 0) {
+        projectQuery._id = { $in: shareLink.allowedProjects };
+      }
+      // Otherwise if allowedCategories are specified, filter by them
+      else if (shareLink.allowedCategories && shareLink.allowedCategories.length > 0) {
         projectQuery.category = { $in: shareLink.allowedCategories };
         categoryQuery = { _id: { $in: shareLink.allowedCategories } };
       }
