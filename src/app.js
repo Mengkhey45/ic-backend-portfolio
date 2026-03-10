@@ -8,6 +8,7 @@ import projectRoutes from "./routes/project.routes.js";
 import categoryRoutes from "./routes/category.routes.js";
 import shareRoutes from "./routes/share.routes.js";
 import portfolioRoutes from "./routes/portfolio.routes.js";
+import profileRoutes from "./routes/profile.routes.js";
 import { errorMiddleware } from "./middlewares/error.middleware.js";
 
 const app = express();
@@ -59,6 +60,7 @@ app.use("/api/projects", projectRoutes);
 app.use("/api/categories", categoryRoutes);
 app.use("/api/share-links", shareRoutes);
 app.use("/api/portfolio", portfolioRoutes);
+app.use("/api/profile", profileRoutes);
 
 // Health check
 app.get("/health", (req, res) => {
