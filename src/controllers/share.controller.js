@@ -29,7 +29,10 @@ export const createShareLink = async (req, res) => {
 
 export const getShareLinks = async (req, res) => {
   try {
-    const shareLinks = await ShareLink.find().sort({ createdAt: -1 });
+    const shareLinks = await ShareLink.find()
+      .populate({ path: 'projectIds', select: 'title category', populate: { path: 'category', select: 'name' } })
+      .populate({ path: 'projectId', select: 'title category', populate: { path: 'category', select: 'name' } })
+      .sort({ createdAt: -1 });
     res.json({ shareLinks });
   } catch (error) {
     res.status(500).json({ message: "Error fetching share links" });
