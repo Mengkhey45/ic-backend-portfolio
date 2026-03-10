@@ -3,7 +3,7 @@ import crypto from "crypto";
 
 export const createShareLink = async (req, res) => {
   try {
-    const { isPortfolioLink, expiresAt, projectId, privateNote, allowedCategories } = req.body;
+    const { isPortfolioLink, expiresAt, projectId, projectIds, privateNote, allowedCategories } = req.body;
     
     const token = crypto.randomBytes(32).toString("hex");
     
@@ -15,6 +15,7 @@ export const createShareLink = async (req, res) => {
       expiresAt: new Date(expiresAt),
       isPortfolioLink,
       projectId: projectId || null,
+      projectIds: projectIds || [],
       privateNote: privateNote || "",
       accessCode: accessCode,
       allowedCategories: allowedCategories || []

@@ -44,11 +44,14 @@ export const getPublicPortfolio = async (req, res) => {
         .populate("category")
         .sort({ createdAt: -1 });
     } else {
-      // Get only the specific project
+      // Get specific project(s)
+      const ids = shareLink.projectIds?.length > 0 
+        ? shareLink.projectIds 
+        : shareLink.projectId ? [shareLink.projectId] : [];
       projects = await Project.find({ 
-        _id: shareLink.projectId,
+        _id: { $in: ids },
         isHidden: false 
-      }).populate("category");
+      }).populate("category").sort({ createdAt: -1 });
     }
 
     const categories = await Category.find(categoryQuery);
