@@ -49,9 +49,14 @@ export const getPublicPortfolio = async (req, res) => {
         ? shareLink.projectIds 
         : shareLink.projectId ? [shareLink.projectId] : [];
       projects = await Project.find({ 
-        _id: { $in: ids },
-        isHidden: false 
+        _id: { $in: ids }
       }).populate("category").sort({ createdAt: -1 });
+
+      // Only return categories that the selected projects belong to
+      const projectCategoryIds = [...new Set(
+        projects.map((p) => p.category?._id?.toString()).filter(Boolean)
+      )];
+      categoryQuery = { _id: { $in: projectCategoryIds } };
     }
 
     const categories = await Category.find(categoryQuery);
