@@ -61,6 +61,7 @@ export const getPublicPortfolio = async (req, res) => {
 
     const categories = await Category.find(categoryQuery);
 
+    res.set("Cache-Control", "public, max-age=300");
     res.json({ projects, categories });
   } catch (error) {
     console.error("Public portfolio error:", error);
