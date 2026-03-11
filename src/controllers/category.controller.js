@@ -35,7 +35,6 @@ export const getCategories = async (req, res) => {
       }
     }
 
-    res.set("Cache-Control", "public, max-age=300");
     res.json({ categories });
   } catch (error) {
     res.status(500).json({ message: "Error fetching categories" });
