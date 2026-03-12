@@ -19,5 +19,6 @@ ProjectSchema.index({ category: 1 });
 ProjectSchema.index({ isHidden: 1 });
 ProjectSchema.index({ createdAt: -1 });
 ProjectSchema.index({ category: 1, isHidden: 1 });
+ProjectSchema.index({ title: 1 });
 
 export default mongoose.model("Project", ProjectSchema);

@@ -70,28 +70,31 @@ export const createProject = async (req, res) => {
       thumbnail = await uploadToR2(req.files.thumbnail[0], "thumbnails");
     }
 
-    // Handle images
+    // Parallel upload for images
     if (req.files?.images) {
-      for (const file of req.files.images) {
-        const url = await uploadToR2(file, "media/images");
-        media.push({ type: "image", url, title: file.originalname });
-      }
+      const imageUploads = req.files.images.map(file => uploadToR2(file, "media/images"));
+      const imageResults = await Promise.all(imageUploads);
+      imageResults.forEach((url, idx) => {
+        media.push({ type: "image", url, title: req.files.images[idx].originalname });
+      });
     }
 
-    // Handle videos
+    // Parallel upload for videos
     if (req.files?.video) {
-      for (const file of req.files.video) {
-        const url = await uploadToR2(file, "media/videos");
-        media.push({ type: "video", url, title: file.originalname });
-      }
+      const videoUploads = req.files.video.map(file => uploadToR2(file, "media/videos"));
+      const videoResults = await Promise.all(videoUploads);
+      videoResults.forEach((url, idx) => {
+        media.push({ type: "video", url, title: req.files.video[idx].originalname });
+      });
     }
 
-    // Handle pdfs
+    // Parallel upload for pdfs
     if (req.files?.pdf) {
-      for (const file of req.files.pdf) {
-        const url = await uploadToR2(file, "media/pdfs");
-        media.push({ type: "pdf", url, title: file.originalname });
-      }
+      const pdfUploads = req.files.pdf.map(file => uploadToR2(file, "media/pdfs"));
+      const pdfResults = await Promise.all(pdfUploads);
+      pdfResults.forEach((url, idx) => {
+        media.push({ type: "pdf", url, title: req.files.pdf[idx].originalname });
+      });
     }
 
     // Parse links
@@ -157,25 +160,31 @@ export const updateProject = async (req, res) => {
       thumbnail = await uploadToR2(req.files.thumbnail[0], "thumbnails");
     }
 
+    // Parallel upload for images
     if (req.files?.images) {
-      for (const file of req.files.images) {
-        const url = await uploadToR2(file, "media/images");
-        media.push({ type: "image", url, title: file.originalname });
-      }
+      const imageUploads = req.files.images.map(file => uploadToR2(file, "media/images"));
+      const imageResults = await Promise.all(imageUploads);
+      imageResults.forEach((url, idx) => {
+        media.push({ type: "image", url, title: req.files.images[idx].originalname });
+      });
     }
 
+    // Parallel upload for videos
     if (req.files?.video) {
-      for (const file of req.files.video) {
-        const url = await uploadToR2(file, "media/videos");
-        media.push({ type: "video", url, title: file.originalname });
-      }
+      const videoUploads = req.files.video.map(file => uploadToR2(file, "media/videos"));
+      const videoResults = await Promise.all(videoUploads);
+      videoResults.forEach((url, idx) => {
+        media.push({ type: "video", url, title: req.files.video[idx].originalname });
+      });
     }
 
+    // Parallel upload for pdfs
     if (req.files?.pdf) {
-      for (const file of req.files.pdf) {
-        const url = await uploadToR2(file, "media/pdfs");
-        media.push({ type: "pdf", url, title: file.originalname });
-      }
+      const pdfUploads = req.files.pdf.map(file => uploadToR2(file, "media/pdfs"));
+      const pdfResults = await Promise.all(pdfUploads);
+      pdfResults.forEach((url, idx) => {
+        media.push({ type: "pdf", url, title: req.files.pdf[idx].originalname });
+      });
     }
 
     let parsedLinks = [];
