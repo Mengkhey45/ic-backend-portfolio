@@ -14,8 +14,8 @@ const router = express.Router();
 const cpUpload = upload.fields([
   { name: 'thumbnail', maxCount: 1 },
   { name: 'images', maxCount: 10 },
-  { name: 'video', maxCount: 1 },
-  { name: 'pdf', maxCount: 1 }
+  { name: 'video', maxCount: 10 },
+  { name: 'pdf', maxCount: 10 }
 ]);
 
 // public

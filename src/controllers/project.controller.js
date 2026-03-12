@@ -78,16 +78,20 @@ export const createProject = async (req, res) => {
       }
     }
 
-    // Handle video
-    if (req.files?.video?.[0]) {
-      const url = await uploadToR2(req.files.video[0], "media/videos");
-      media.push({ type: "video", url, title: req.files.video[0].originalname });
+    // Handle videos
+    if (req.files?.video) {
+      for (const file of req.files.video) {
+        const url = await uploadToR2(file, "media/videos");
+        media.push({ type: "video", url, title: file.originalname });
+      }
     }
 
-    // Handle pdf
-    if (req.files?.pdf?.[0]) {
-      const url = await uploadToR2(req.files.pdf[0], "media/pdfs");
-      media.push({ type: "pdf", url, title: req.files.pdf[0].originalname });
+    // Handle pdfs
+    if (req.files?.pdf) {
+      for (const file of req.files.pdf) {
+        const url = await uploadToR2(file, "media/pdfs");
+        media.push({ type: "pdf", url, title: file.originalname });
+      }
     }
 
     // Parse links
@@ -160,14 +164,18 @@ export const updateProject = async (req, res) => {
       }
     }
 
-    if (req.files?.video?.[0]) {
-      const url = await uploadToR2(req.files.video[0], "media/videos");
-      media.push({ type: "video", url, title: req.files.video[0].originalname });
+    if (req.files?.video) {
+      for (const file of req.files.video) {
+        const url = await uploadToR2(file, "media/videos");
+        media.push({ type: "video", url, title: file.originalname });
+      }
     }
 
-    if (req.files?.pdf?.[0]) {
-      const url = await uploadToR2(req.files.pdf[0], "media/pdfs");
-      media.push({ type: "pdf", url, title: req.files.pdf[0].originalname });
+    if (req.files?.pdf) {
+      for (const file of req.files.pdf) {
+        const url = await uploadToR2(file, "media/pdfs");
+        media.push({ type: "pdf", url, title: file.originalname });
+      }
     }
 
     let parsedLinks = [];
