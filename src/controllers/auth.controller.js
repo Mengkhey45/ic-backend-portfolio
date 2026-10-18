@@ -5,8 +5,12 @@ export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
+    if (!email || !password || typeof email !== "string" || typeof password !== "string") {
+      return res.status(400).json({ message: "Invalid email or password" });
+    }
+
     // Find user in MongoDB
-    const user = await User.findOne({ email: email.toLowerCase() });
+    const user = await User.findOne({ email: email.trim().toLowerCase() });
     if (!user) {
       return res.status(401).json({ message: "Invalid credentials" });
     }

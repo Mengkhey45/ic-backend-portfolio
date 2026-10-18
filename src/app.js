@@ -4,6 +4,7 @@ import helmet from "helmet";
 import compression from "compression";
 import morgan from "morgan";
 import rateLimit from "express-rate-limit";
+import { sanitizeNoSQL } from "./middlewares/mongo-sanitize.middleware.js";
 import authRoutes from "./routes/auth.routes.js";
 import projectRoutes from "./routes/project.routes.js";
 import categoryRoutes from "./routes/category.routes.js";
@@ -14,12 +15,15 @@ import { errorMiddleware } from "./middlewares/error.middleware.js";
 
 const app = express();
 
-// Middlewares
+// Trust reverse proxy (Render, Vercel, Cloudflare) for accurate rate limiting by real client IP
+app.set("trust proxy", 1);
+
+// Security Headers
 app.use(helmet({
   crossOriginResourcePolicy: false,
 }));
 
-// Dynamic CORS configuration to support Vercel preview links and production
+// Strict CORS configuration
 const allowedOrigins = [
   "http://localhost:3000",
   "http://localhost:3001",
@@ -32,13 +36,11 @@ const allowedOrigins = [
 
 app.use(cors({
   origin: (origin, callback) => {
-    // allow requests with no origin (like mobile apps or curl requests)
+    // allow requests with no origin (like mobile apps, curl, or server-to-server)
     if (!origin) return callback(null, true);
     
-    const isAllowed = allowedOrigins.includes(origin) || 
-                     origin.endsWith(".vercel.app") || 
-                     origin.includes("vercel.app") ||
-                     origin.endsWith(".github.io");
+    const frontendUrl = process.env.FRONTEND_URL ? process.env.FRONTEND_URL.replace(/\/$/, "") : null;
+    const isAllowed = allowedOrigins.includes(origin) || (frontendUrl && origin === frontendUrl);
                      
     if (isAllowed) {
       callback(null, true);
@@ -52,7 +54,14 @@ app.use(cors({
 app.use(compression({ threshold: 1024 }));
 app.use(morgan("dev"));
 
-// Rate limiting
+// Body parsing with safe limits (DoS protection)
+app.use(express.json({ limit: "2mb" }));
+app.use(express.urlencoded({ extended: true, limit: "2mb" }));
+
+// Prevent MongoDB operator injection (e.g. { "$gt": "" })
+app.use(sanitizeNoSQL);
+
+// Rate limiters
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 200, // limit each IP to 200 requests per window
@@ -63,24 +72,31 @@ const apiLimiter = rateLimit({
 
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 20, // stricter for auth
+  max: 20, // stricter for login attempts
   standardHeaders: true,
   legacyHeaders: false,
   message: { message: "Too many login attempts, please try again later." },
 });
 
-app.use("/api", apiLimiter);
+// Dedicated limiter to prevent brute-forcing 6-digit portfolio access codes
+const portfolioLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 30, // maximum 30 attempts per 15 minutes per IP
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { message: "Too many portfolio access attempts, please try again later." },
+});
 
-app.use(express.json({ limit: "100mb" }));
-app.use(express.urlencoded({ extended: true, limit: "100mb" }));
+app.use("/api", apiLimiter);
 
 // Routes
 app.use("/api/auth", authLimiter, authRoutes);
 app.use("/api/projects", projectRoutes);
 app.use("/api/categories", categoryRoutes);
 app.use("/api/share-links", shareRoutes);
-app.use("/api/portfolio", portfolioRoutes);
+app.use("/api/portfolio", portfolioLimiter, portfolioRoutes);
 app.use("/api/profile", profileRoutes);
+
 
 // Health check
 app.get("/health", (req, res) => {
