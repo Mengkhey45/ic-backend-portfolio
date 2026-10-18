@@ -51,6 +51,7 @@ export const getProjects = async (req, res) => {
       }
     }
 
+    res.set("Cache-Control", "public, max-age=30, stale-while-revalidate=120");
     res.json({ projects });
   } catch (error) {
     console.error("Fetch projects error:", error);
